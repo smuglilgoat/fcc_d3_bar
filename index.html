@@ -8,159 +8,48 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <title>FCC D3 Bar Chart</title>
   </head>
+
   <body>
-        <div class="container">
-          <h1 id="title">United States GDP</h1>
-        </div>
+    <div class="container">
+      <h1 id="title">United States GDP</h1>
+    </div>
   </body>
   <script>
+    const margin = { top: 30, right: 30, bottom: 30, left: 60 },
+      width = 800 - margin.left - margin.right,
+      height = 600 - margin.top - margin.bottom;
 
-var width = 1300,
-  height = 700
+    const svg = d3
+      .select(".container")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
 
-var tooltip = d3
-  .select('.container')
-  .append('div')
-  .attr('id', 'tooltip')
-  .style('opacity', 0);
+    d3.json(
+      "https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json"
+    ).then((data) => {
+      console.log(data);
 
-var overlay = d3
-  .select('.container')
-  .append('div')
-  .attr('class', 'overlay')
-  .style('opacity', 0);
+      const dates = data.data.map((d) => new Date(d[0]));
+      const values = data.data.map((d) => d[1]);
 
-var svgContainer = d3
-  .select('.container')
-  .append('svg')
-  .attr('width', "100%")
-  .attr('height', "90%")
+      const xScale = d3
+        .scaleTime()
+        .domain([d3.min(dates), d3.max(dates)])
+        .range([0, width]);
 
-d3.json(
-  'https://raw.githubusercontent.com/FreeCodeCamp/ProjectReferenceData/master/GDP-data.json'
-)
-  .then((data) => {
+      const xAxis = d3.axisBottom().scale(xScale);
 
-    var years = data.data.map(function (item) {
-      var quarter;
-      var temp = item[0].substring(5, 7);
+      svg.append("g").attr("transform", `translate(60, ${height})`).call(xAxis);
 
-      if (temp === '01') {
-        quarter = 'Q1';
-      } else if (temp === '04') {
-        quarter = 'Q2';
-      } else if (temp === '07') {
-        quarter = 'Q3';
-      } else if (temp === '10') {
-        quarter = 'Q4';
-      }
+      const yScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(values)])
+        .range([height, 0]);
 
-      return item[0].substring(0, 4) + ' ' + quarter;
+      const yAxis = d3.axisLeft(yScale);
+
+      svg.append("g").attr("transform", `translate(60, 00)`).call(yAxis);
     });
-
-    var yearsDate = data.data.map(function (item) {
-      return new Date(item[0]);
-    });
-
-    var xMax = new Date(d3.max(yearsDate));
-    xMax.setMonth(xMax.getMonth() + 3);
-    var xScale = d3
-      .scaleTime()
-      .domain([d3.min(yearsDate), xMax])
-      .range([0, document.querySelector('.container').offsetWidth - 90]);
-
-    var xAxis = d3.axisBottom().scale(xScale);
-
-    console.log(d3.select('.container'))
-    svgContainer
-      .append('g')
-      .call(xAxis)
-      .attr('id', 'x-axis')
-      .attr('transform', 'translate(60, 550)');
-
-    var GDP = data.data.map(function (item) {
-      return item[1];
-    });
-
-    var scaledGDP = [];
-
-    var gdpMax = d3.max(GDP);
-
-    var linearScale = d3.scaleLinear().domain([0, gdpMax]).range([0, height]);
-
-    scaledGDP = GDP.map(function (item) {
-      return linearScale(item);
-    });
-
-    var yAxisScale = d3.scaleLinear().domain([0, gdpMax]).range([height, 0]);
-
-    var yAxis = d3.axisLeft(yAxisScale);
-
-    svgContainer
-      .append('g')
-      .call(yAxis)
-      .attr('id', 'y-axis')
-      .attr('transform', 'translate(60, 0)');
-
-    d3.select('svg')
-      .selectAll('rect')
-      .data(scaledGDP)
-      .enter()
-      .append('rect')
-      .attr('data-date', function (d, i) {
-        return data.data[i][0];
-      })
-      .attr('data-gdp', function (d, i) {
-        return data.data[i][1];
-      })
-      .attr('class', 'bar')
-      .attr('x', function (d, i) {
-        return xScale(yearsDate[i]);
-      })
-      .attr('y', function (d) {
-        return height - d;
-      })
-      .attr('width', barWidth)
-      .attr('height', function (d) {
-        return d;
-      })
-      .attr('index', (d, i) => i)
-      .style('fill', '#33adff')
-      .attr('transform', 'translate(60, 0)')
-      .on('mouseover', function (event, d) {
-        // d or datum is the height of the
-        // current rect
-        var i = this.getAttribute('index');
-
-        overlay
-          .transition()
-          .duration(0)
-          .style('height', d + 'px')
-          .style('width', barWidth + 'px')
-          .style('opacity', 0.9)
-          .style('left', i * barWidth + 0 + 'px')
-          .style('top', height - d + 'px')
-          .style('transform', 'translateX(60px)');
-        tooltip.transition().duration(200).style('opacity', 0.9);
-        tooltip
-          .html(
-            years[i] +
-              '<br>' +
-              '$' +
-              GDP[i].toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') +
-              ' Billion'
-          )
-          .attr('data-date', data.data[i][0])
-          .style('left', i * barWidth + 30 + 'px')
-          .style('top', height - 100 + 'px')
-          .style('transform', 'translateX(60px)');
-      })
-      .on('mouseout', function () {
-        tooltip.transition().duration(200).style('opacity', 0);
-        overlay.transition().duration(200).style('opacity', 0);
-      });
-  })
-  .catch((e) => console.log(e));
-
   </script>
 </html>
