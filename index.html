@@ -31,7 +31,7 @@
       console.log(data);
 
       const dates = data.data.map((d) => new Date(d[0]));
-      const values = data.data.map((d) => d[1]);
+      const values = data.data.map((v) => v[1]);
 
       const xScale = d3
         .scaleTime()
@@ -50,6 +50,24 @@
       const yAxis = d3.axisLeft(yScale);
 
       svg.append("g").attr("transform", `translate(60, 00)`).call(yAxis);
+
+      const scaleDown = d3
+        .scaleLinear()
+        .domain([0, d3.max(values)])
+        .range([0, height]);
+
+      const scaledValues = values.map((v) => scaleDown(v));
+
+      svg
+        .selectAll("bar")
+        .data(scaledValues)
+        .join("rect")
+        .attr("x", (d, i) => xScale(dates[i]))
+        .attr("y", (d) => height - d)
+        .attr("width", width / 275)
+        .attr("height", (d) => d)
+        .attr("fill", "lightgreen")
+        .attr("transform", `translate(60, 00)`);
     });
   </script>
 </html>
