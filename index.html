@@ -40,7 +40,11 @@
 
       const xAxis = d3.axisBottom().scale(xScale);
 
-      svg.append("g").attr("transform", `translate(60, ${height})`).call(xAxis);
+      svg
+        .append("g")
+        .attr("transform", `translate(60, ${height})`)
+        .call(xAxis)
+        .attr("id", "x-axis");
 
       const yScale = d3
         .scaleLinear()
@@ -49,7 +53,11 @@
 
       const yAxis = d3.axisLeft(yScale);
 
-      svg.append("g").attr("transform", `translate(60, 00)`).call(yAxis);
+      svg
+        .append("g")
+        .attr("transform", `translate(60, 00)`)
+        .call(yAxis)
+        .attr("id", "y-axis");
 
       const scaleDown = d3
         .scaleLinear()
@@ -58,8 +66,21 @@
 
       const scaledValues = values.map((v) => scaleDown(v));
 
+      const tooltip = d3
+        .select("body")
+        .append("div")
+        .attr("id", "tooltip")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden")
+        .style("padding", "10px")
+        .style("background", "rgba(0,0,0,0.6)")
+        .style("border-radius", "4px")
+        .style("color", "#fff")
+        .text("a simple tooltip");
+
       svg
-        .selectAll("bar")
+        .selectAll("chart")
         .data(scaledValues)
         .join("rect")
         .attr("x", (d, i) => xScale(dates[i]))
@@ -67,7 +88,25 @@
         .attr("width", width / 275)
         .attr("height", (d) => d)
         .attr("fill", "lightgreen")
-        .attr("transform", `translate(60, 00)`);
+        .attr("transform", `translate(60, 00)`)
+        .attr("data-date", (d, i) => dates[i])
+        .attr("data-gdp", (d, i) => values[i])
+        .attr("class", "bar")
+        .on("mouseover", function () {
+          tooltip
+            .html(
+              `<div>Date: ${this.getAttribute('data-date')}</div><div>Value: ${this.getAttribute('data-gdp')}</div>`
+            )
+            .style("visibility", "visible");
+        })
+        .on("mousemove", function (event) {
+          tooltip
+            .style("top", event.y + "px")
+            .style("left", event.x + "px");
+        })
+        .on("mouseout", function () {
+          tooltip.html(``).style("visibility", "hidden");
+        });
     });
   </script>
 </html>
