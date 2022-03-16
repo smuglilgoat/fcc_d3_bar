@@ -31,6 +31,7 @@
       console.log(data);
 
       const dates = data.data.map((d) => new Date(d[0]));
+      const datesOg = data.data.map((d) => d[0]);
       const values = data.data.map((v) => v[1]);
 
       const xScale = d3
@@ -89,7 +90,7 @@
         .attr("height", (d) => d)
         .attr("fill", "lightgreen")
         .attr("transform", `translate(60, 00)`)
-        .attr("data-date", (d, i) => dates[i])
+        .attr("data-date", (d, i) => datesOg[i])
         .attr("data-gdp", (d, i) => values[i])
         .attr("class", "bar")
         .on("mouseover", function () {
@@ -97,7 +98,8 @@
             .html(
               `<div>Date: ${this.getAttribute('data-date')}</div><div>Value: ${this.getAttribute('data-gdp')}</div>`
             )
-            .style("visibility", "visible");
+            .style("visibility", "visible")
+            .attr("data-date", this.getAttribute('data-date'));
         })
         .on("mousemove", function (event) {
           tooltip
